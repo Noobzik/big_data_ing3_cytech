@@ -6,11 +6,8 @@ services:
     environment:
       - HADOOP_HOME=/opt/hadoop
     ports:
-      - "9820:9820"
       - "9870:9870"
-      - "8088:8088"  # YARN ResourceManager web UI
-      - "7077:7077"
-      - "16010:16010"
+      - "8020:8020"
     command: ["/bin/bash", "/start-hdfs.sh"]
     volumes:
       - ./hadoop_namenode:/opt/hadoop/data/nameNode
@@ -19,62 +16,72 @@ services:
       - ./start-hdfs.sh:/start-hdfs.sh
     networks:
       hdfs_network:
-        ipv4_address: 172.60.0.2
+        ipv4_address: 172.20.0.2
 
-  datanode1:
+  datanode:
     image: apache/hadoop:3.4.0
     container_name: datanode1
     environment:
       - HADOOP_HOME=/opt/hadoop
-    command: [ "/bin/bash", "/init-datanode.sh" ]
+    command: ["/bin/bash", "/init-datanode.sh"]
+    ports:
+      - "9864:9864"
     volumes:
       - ./hadoop_datanode1:/opt/hadoop/data/dataNode
       - ./hadoop_config:/opt/hadoop/etc/hadoop
+      - ./shared:/shared
       - ./init-datanode.sh:/init-datanode.sh
     networks:
       hdfs_network:
-        ipv4_address: 172.60.0.3
-
+        ipv4_address: 172.20.0.3
+  
   resourcemanager:
     image: apache/hadoop:3.4.0
     container_name: resourcemanager
-    user: hadoop
+    hostname: resourcemanager
+    user: root
     environment:
       - HADOOP_HOME=/opt/hadoop
-      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
-      - JAVA_HOME=/usr/lib/jvm/jre
-      - YARN_RESOURCEMANAGER_USER=hadoop
-      - YARN_NODEMANAGER_USER=hadoop
     ports:
-      - "8090:8088"  # ResourceManager web UI
-    command: ["/bin/bash", "-c", "/opt/hadoop/sbin/start-yarn.sh && tail -f /dev/null"]
+      - "8088:8088"  # ResourceManager Web UI
+      - "8030:8030"  # ResourceManager Scheduler
+      - "8031:8031"  # ResourceManager Resource Tracker
+      - "8032:8032"  # ResourceManager Application Manager
+    command: ["/bin/bash", "/start-yarn.sh"]
     volumes:
       - ./hadoop_config:/opt/hadoop/etc/hadoop
+      - ./shared:/shared
+      - ./start-yarn.sh:/start-yarn.sh
     networks:
       hdfs_network:
-        ipv4_address: 172.60.0.4
+        ipv4_address: 172.20.0.4
+    depends_on:
+      - namenode
+
 
   nodemanager:
     image: apache/hadoop:3.4.0
-    container_name: nodemanager
-    user: hadoop
+    container_name: nodemanager1
+    hostname: nodemanager1
     environment:
       - HADOOP_HOME=/opt/hadoop
-      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
-      - JAVA_HOME=/usr/lib/jvm/jre
-      - YARN_NODEMANAGER_USER=hadoop
     ports:
-      - "8042:8042"  # NodeManager web UI
-    command: ["/bin/bash", "-c", "/opt/hadoop/bin/yarn nodemanager && tail -f /dev/null"]
+      - "8042:8042"  # NodeManager Web UI
+    command: ["/bin/bash", "/start-nodemanager.sh"]
     volumes:
+      - ./hadoop_nodemanager1:/opt/hadoop/data/nodeManager
       - ./hadoop_config:/opt/hadoop/etc/hadoop
+      - ./shared:/shared
+      - ./start-nodemanager.sh:/start-nodemanager.sh
     networks:
       hdfs_network:
-        ipv4_address: 172.60.0.5
+        ipv4_address: 172.20.0.5
+    depends_on:
+      - resourcemanager
 
 networks:
   hdfs_network:
     ipam:
       driver: default
       config:
-        - subnet: 172.60.0.0/16
+        - subnet: 172.20.0.0/16
