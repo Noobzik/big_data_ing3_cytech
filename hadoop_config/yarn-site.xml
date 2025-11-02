@@ -1,27 +1,37 @@
+<?xml version="1.0"?>
 <configuration>
     <property>
         <name>yarn.resourcemanager.hostname</name>
         <value>resourcemanager</value>
-        <description>The hostname of the ResourceManager.</description>
-    </property>
-    <property>
-        <name>yarn.nodemanager.aux-services</name>
-        <value>mapreduce_shuffle</value>
-        <description>Enabling the shuffle service on NodeManagers.</description>
-    </property>
-    <property>
-        <name>yarn.nodemanager.vmem-check-enabled</name>
-        <value>false</value>
-        <description>Disabling virtual memory checks.</description>
     </property>
     <property>
         <name>yarn.resourcemanager.address</name>
         <value>resourcemanager:8032</value>
-        <description>Address for the ResourceManager.</description>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.scheduler.address</name>
+        <value>resourcemanager:8030</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.resource-tracker.address</name>
+        <value>resourcemanager:8031</value>
     </property>
     <property>
         <name>yarn.resourcemanager.webapp.address</name>
         <value>resourcemanager:8088</value>
-        <description>Web UI for the ResourceManager.</description>
+    </property>
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+        <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+    </property>
+    
+    <!-- Use FairScheduler instead of CapacityScheduler -->
+    <property>
+        <name>yarn.resourcemanager.scheduler.class</name>
+        <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler</value>
     </property>
 </configuration>
